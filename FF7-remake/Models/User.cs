@@ -23,6 +23,8 @@ public class User
     [StringLength(1000)]
     public string Progress { get; set; }
     
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
     public virtual ICollection<UserProgress>UserProgresses { get; set; }
     public virtual ICollection<Leaderboard> LeaderboardEntries { get; set; }
 }
