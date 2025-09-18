@@ -9,19 +9,19 @@ public class User
     
     [Required]
     [StringLength(100)]
-    public string Username { get; set; }
+    public string Username { get; set; } =  string.Empty;
     
     [Required]
     [StringLength(200)]
     [EmailAddress]
-    public string Email { get; set; }
+    public string Email { get; set; } =  string.Empty;
     
     [Required]
     [StringLength(255)]
-    public string Password { get; set; }
+    public string Password { get; set; } =  string.Empty;
     
     [StringLength(1000)]
-    public string Progress { get; set; }
+    public string Progress { get; set; } =  string.Empty;
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
