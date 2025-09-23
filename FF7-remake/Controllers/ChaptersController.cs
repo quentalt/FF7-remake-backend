@@ -1,5 +1,4 @@
 using FF7_remake.DTOs;
-using FF7_remake.Models;
 using FF7_remake.Services;
 using Microsoft.AspNetCore.Mvc;
 
