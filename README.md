@@ -1,6 +1,6 @@
 # 🎮 Quiz FF7 Remake - Backend
 
-Un projet backend développé en **C#** par deux passionnés, permettant de créer et gérer un quiz autour de **Final Fantasy VII Remake**.  
+Un projet backend développé à 2 en **C#** dans un groupe de 3 passionnés, permettant de créer et gérer un quiz autour de **Final Fantasy VII Remake**.  
 Ce projet fournit une API pour gérer les questions, réponses, scores et utilisateurs.
 
 ---
