@@ -7,8 +7,10 @@ Ce projet fournit une API pour gérer les questions, réponses, scores et utilis
 
 ## 🚀 Fonctionnalités
 
-- 📋 Gestion des **questions** (CRUD)  
-- ✅ Vérification des **réponses**  
+- 📋 Gestion des **questions**
+- 📚 Gestion des **chapitres**
+- ✅ Vérification des **réponses**
+- 📈 Suivi de la **progression des utilisateurs** par chapitre et par quiz  
 - 🏆 Système de **scores** et classement  
 - 🔒 Authentification  
 
