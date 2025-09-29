@@ -76,11 +76,11 @@ public class ChaptersController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ApiResponse<ChapterDto>>> CreateChapter(CreateChapterDto createChapterDto)
+    public async Task<ActionResult<ApiResponse<ChapterDto>>> CreateChapter(UpdateChapterDto updateChapterDto)
     {
         try
         {
-            var chapter = await _chapterService.CreateChapterAsync(createChapterDto);
+            var chapter = await _chapterService.CreateChapterAsync(updateChapterDto);
             return CreatedAtAction(nameof(GetChapter), new { id = chapter.ChapterId }, new ApiResponse<ChapterDto>
             {
                 Success = true,
@@ -101,7 +101,7 @@ public class ChaptersController : ControllerBase
 
     [HttpPut("{id}")]
     public async Task<ActionResult<ApiResponse<ChapterDto>>> UpdateChapter(int id,
-        CreateChapterDto updateChapterDto)
+        UpdateChapterDto updateChapterDto)
     {
         try
         {

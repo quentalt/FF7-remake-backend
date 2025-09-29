@@ -12,6 +12,6 @@ public class QuizController : ControllerBase
 
     public QuizController(IUserService userService)
     {
-        _userS
+        // _userS
     }
 }

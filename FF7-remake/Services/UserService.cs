@@ -75,7 +75,6 @@ public class UserService : IUserService
                         Username = createUserDto.UserName,
                         Email = createUserDto.Email,
                         Password = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password),
-                        Progress = createUserDto.Progress,
                         CreatedAt = DateTime.UtcNow
                 };
 
@@ -87,7 +86,6 @@ public class UserService : IUserService
                         UserId = user.UserId,
                         UserName = user.Username,
                         Email = user.Email,
-                        Progress = user.Progress,
                         CreatedAt = user.CreatedAt
                 };
         }

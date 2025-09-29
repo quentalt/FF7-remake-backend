@@ -9,8 +9,8 @@ public interface IChapterService
 {
     Task<List<ChapterDto>> GetAllChaptersAsync();
     Task<ChapterDto?> GetChapterByIdAsync(int id);
-    Task<ChapterDto> CreateChapterAsync(CreateChapterDto createChapterDto);
-    Task<ChapterDto?> UpdateChapterAsync(int id, CreateChapterDto updateChapterDto);
+    Task<ChapterDto> CreateChapterAsync(UpdateChapterDto updateChapterDto);
+    Task<ChapterDto?> UpdateChapterAsync(int id, UpdateChapterDto updateChapterDto);
     Task<bool> DeleteChapterAsync(int id);
 }
 
@@ -70,13 +70,13 @@ public class ChapterService : IChapterService
         
     }
 
-    public async Task<ChapterDto> CreateChapterAsync(CreateChapterDto createChapterDto)
+    public async Task<ChapterDto> CreateChapterAsync(UpdateChapterDto updateChapterDto)
     {
         var chapter = new Chapter
         {
-            Title = createChapterDto.Title,
-            Summary = createChapterDto.Summary,
-            Quiz = createChapterDto.Quiz
+            Title = updateChapterDto.Title,
+            Summary = updateChapterDto.Summary,
+            Quiz = updateChapterDto.Quiz
         };
 
         _context.Chapters.Add(chapter);
@@ -92,7 +92,7 @@ public class ChapterService : IChapterService
         };
     }
 
-    public async Task<ChapterDto?> UpdateChapterAsync(int id, CreateChapterDto updateChapterDto)
+    public async Task<ChapterDto?> UpdateChapterAsync(int id, UpdateChapterDto updateChapterDto)
     {
      var chapter =  await _context.Chapters.FindAsync(id); 
      if (chapter == null) return null;
