@@ -8,5 +8,8 @@ public class UserDto
     
     public string Password { get; set; } = string.Empty;
     public string Progress { get; set; } = string.Empty;
+    
+    public string ProfileImageUrl { get; set; } = string.Empty;
+
     public DateTime CreatedAt { get; set; }
 }

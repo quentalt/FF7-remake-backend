@@ -20,6 +20,9 @@ public class User
     [StringLength(255)]
     public string Password { get; set; } =  string.Empty;
     
+    [StringLength(500)]
+    public string ProfileImageUrl { get; set; } =  string.Empty;
+    
     [StringLength(1000)]
     public string Progress { get; set; } =  string.Empty;
     

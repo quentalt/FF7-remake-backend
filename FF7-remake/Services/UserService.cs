@@ -34,6 +34,7 @@ public class UserService : IUserService
                                 UserName = u.Username,
                                 Email = u.Email,
                                 Progress = u.Progress,
+                                ProfileImageUrl = u.ProfileImageUrl,
                                 CreatedAt = u.CreatedAt
                         }).ToListAsync();
         }
@@ -64,6 +65,7 @@ public class UserService : IUserService
                         UserName = user.Username,
                         Email = user.Email,
                         Progress = user.Progress,
+                        ProfileImageUrl = user.ProfileImageUrl,
                         CreatedAt = user.CreatedAt
                 };
         }
@@ -75,6 +77,7 @@ public class UserService : IUserService
                         Username = createUserDto.UserName,
                         Email = createUserDto.Email,
                         Password = BCrypt.Net.BCrypt.HashPassword(createUserDto.Password),
+                        ProfileImageUrl = createUserDto.ProfileImageUrl,
                         CreatedAt = DateTime.UtcNow
                 };
 
