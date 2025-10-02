@@ -75,4 +75,6 @@ public class Ff7DbContext : DbContext
             entity.Property(e => e.Score).IsRequired();
         });
     }
+
+   
 }

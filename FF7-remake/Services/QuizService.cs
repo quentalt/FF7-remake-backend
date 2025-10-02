@@ -2,17 +2,20 @@ using FF7_remake.DBContext;
 using FF7_remake.DTOs;
 using FF7_remake.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace FF7_remake.Services;
 
 public interface IQuizService
 {
     Task<List<QuizDto>> GetAllQuizzes();
-    Task<QuizDto> GetQuizByIdAsync(int id);
+    Task<QuizDto?> GetQuizByIdAsync(int id);
     Task<QuizDto> CreateQuizDtoAsync(CreateQuizDto createQuizDto);
-    Task<QuizDto> UpdateQuizDtoAsync(int id, CreateQuizDto updateQuizDto);
+    Task<QuizDto?> UpdateQuizDtoAsync(int id, CreateQuizDto updateQuizDto);
     Task<bool> DeleteQuizByIdAsync(int id);
-    
+
+    Task<List<QuizDto>> checkAnswerAsync(int id, Dictionary<int, string> userAnswers);
+
 
 
 }
@@ -29,22 +32,15 @@ public class QuizService : IQuizService
 
     public async Task<List<QuizDto>> GetAllQuizzes()
     {
-        return await context.Quiz
+        return await context.Quizzes
             .Include(q => q.Chapter)
             .Select(q => new QuizDto
             {
                 QuizId = q.QuizId,
-                Question = q.Question,
-                CorrectAnswer = q.CorrectAnswer,
-                Chapters = q.Quizzes.Select
-                (c => new QuizDto
-                                           
-                {
-                    ChapterId = c.ChapterId,
-                    Title = c.Title,
-                    Summary = c.Summary,
-                    Quiz = c.Quiz
-                }).ToList()
+                Questions = q.Question,
+                CorrectAnswers = q.CorrectAnswer,
+                ChapterTitle = q.Chapter.Title,
+                ChapterId = q.ChapterId
                 
             }).ToListAsync();
         
@@ -53,10 +49,10 @@ public class QuizService : IQuizService
         
     }
     
-    public async Task<QuizDTO?> GetQuizByIdAsync( int id)
+    public async Task<QuizDto?> GetQuizByIdAsync( int id)
 
     {
-        var chapter = await context.Quizzes
+        var quiz = await context.Quizzes
             .Include(q => q.Chapter)
             .FirstOrDefaultAsync(q => q.QuizId == id);
 
@@ -65,12 +61,12 @@ public class QuizService : IQuizService
             return null;
         }
 
-        return new QuizDTO
+        return new QuizDto
         {
             QuizId = quiz.QuizId,
             ChapterId = quiz.ChapterId,
-            Question = quiz.Question,
-            CorrectAnswer = quiz.CorrectAnswer,
+            Questions = quiz.Question,
+            CorrectAnswers = quiz.CorrectAnswer,
             Badges = quiz.Badges
 
         };
@@ -95,8 +91,8 @@ public class QuizService : IQuizService
         {
             QuizId = quiz.QuizId,
             ChapterId = quiz.ChapterId,
-            Question = quiz.Question,
-            CorrectAnswer = quiz.CorrectAnswer,
+            Questions = quiz.Question,
+            CorrectAnswers = quiz.CorrectAnswer,
             Badges = quiz.Badges
         };
         
@@ -105,28 +101,24 @@ public class QuizService : IQuizService
 
     public async Task<QuizDto?> UpdateQuizDtoAsync(int id, CreateQuizDto updateQuizDto)
     {
-        var chapter = await context.Quiz
-            .Include(q => q.Quizzes)
-            .FirstOrDefaultAsync(q => q.QuizId == id);
+        var quiz = await context.Quizzes.FindAsync(id);
+           
 
-        if (quiz == null)
-        {
-            return null;
-        }
+        if (quiz == null) return null;
 
-        quiz.Question = UpdateQuizDtoAsync.Question;
-        quiz.CorrectAnswer = UpdateQuizDtoAsync.CorrectAnswer;
-        quiz.Badges = UpdateQuizDtoAsync.Badges;
+        quiz.Question = updateQuizDto.Questions;
+        quiz.CorrectAnswer = updateQuizDto.CorrectAnswers;
+        quiz.Badges = updateQuizDto.Badges;
 
 
         await context.SaveChangesAsync();
 
         return new QuizDto()
         {
-            QuizId = Quiz.QuizId,
-            Questions = Quiz.Questions,
-            CorrectAnswers = Quiz.CorrectAnswers,
-            Badges = Quiz.Badges
+            QuizId = quiz.QuizId,
+            Questions = quiz.Question,
+            CorrectAnswers = quiz.CorrectAnswer,
+            Badges = quiz.Badges
         };
 
 
@@ -137,37 +129,53 @@ public class QuizService : IQuizService
 
     public async Task<bool> DeleteQuizByIdAsync(int id)
     {
-        var quiz = await context.Quiz.FindAsync(id);
+        var quiz = await context.Quizzes.FindAsync(id);
 
         if (quiz == null)
         {
             return false;
         }
         
-        context.Quiz.Remove(quiz);
+        context.Quizzes.Remove(quiz);
 
-        await context.SavesChangesAsync();
+        await context.SaveChangesAsync();
         return true;
 
     }
 
-    public async Task<quizDTO?> findGoodAnswerByIdAsync(int id)
+    public async Task<List<QuizDto>> checkAnswerAsync(int chapterId, Dictionary<int, string> userAnswers)
     {
-        var quiz = await context.Quiz.FindAsync(id);
+        var quizzes = await context.Quizzes
+            .Include(q => q.Chapter)
+            .Where(q => q.ChapterId == chapterId)
+            .ToListAsync();
 
-        if (qu)
+
+        var results = new List<QuizDto>();
+
+
+        foreach (var quiz in quizzes)
         {
-            
-        }
-        
-        
-        
-              
-        
-        
-        
-        
-    } 
+            userAnswers.TryGetValue(quiz.QuizId, out string? userAnswer);
+            bool isCorrect = quiz.CorrectAnswer == userAnswer;
 
-            
+            results.Add(new QuizDto
+                {
+                    QuizId = quiz.QuizId,
+                    ChapterId = quiz.ChapterId,
+                    ChapterTitle = quiz.Chapter.Title,
+                    Questions = quiz.Question,
+                    CorrectAnswers = isCorrect ? "Good Answer" : "Bad Answer"
+                }
+
+            );
+
+        }
+
+        return results;
     }
+
+
+
+
+}
