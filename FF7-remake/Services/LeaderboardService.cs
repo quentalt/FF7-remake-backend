@@ -12,6 +12,8 @@ public interface ILeaderboardService
     Task<LeaderboardDto> CreateLeaderboardDtoAsync(CreateLeaderboardDto createLeaderboardDto);
     Task<LeaderboardDto?> UpdateLeaderboardDtoAsync(int id, CreateLeaderboardDto updateLeaderboardDto);
     Task<bool> DeleteLeaderboardByIdAsync(int id);
+    
+    Task <LeaderboardDto> RankingByOrderById(int id);
 }
 public class LeaderboardService : ILeaderboardService
 {
@@ -134,6 +136,24 @@ public class LeaderboardService : ILeaderboardService
 
         await context.SaveChangesAsync();
         return true;
+    }
+    
+    public async Task<LeaderboardDto> RankingByOrderById(int id)
+    {
+        var ranked = await context.Leaderboards
+            .Include(r => r.User)
+            .Where(r => r.UserId == id)
+            .OrderBy(r => r.Score)
+            .Select(r => new Leaderboard
+            {
+                LeaderBoardId = r.LeaderBoardId,
+                Ranking = r.Ranking,
+                Score = r.Score,
+
+            })
+            .ToListAsync();
+        
+        return ranked;
     }
 
 
