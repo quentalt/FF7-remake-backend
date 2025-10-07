@@ -14,7 +14,7 @@ public interface IQuizService
     Task<QuizDto?> UpdateQuizDtoAsync(int id, CreateQuizDto updateQuizDto);
     Task<bool> DeleteQuizByIdAsync(int id);
 
-    Task<List<QuizDto>> checkAnswerAsync(int id, Dictionary<int, string> userAnswers);
+    Task<List<QuizDto>> CheckAnswerAsync(int id, Dictionary<int, string> userAnswers);
 
 
 
@@ -143,7 +143,7 @@ public class QuizService : IQuizService
 
     }
 
-    public async Task<List<QuizDto>> checkAnswerAsync(int chapterId, Dictionary<int, string> userAnswers)
+    public async Task<List<QuizDto>> CheckAnswerAsync(int chapterId, Dictionary<int, string> userAnswers)
     {
         var quizzes = await context.Quizzes
             .Include(q => q.Chapter)

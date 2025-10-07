@@ -47,7 +47,7 @@ public class LeaderboardService : ILeaderboardService
     public async Task<LeaderboardDto?> GetLeaderboardByIdAsync( int id)
 
     {
-        var leaderboard = await context.Leaderboards
+        var leaderboard = await context.Leaderboards.Include(leaderboard => leaderboard.User)
             .Include(l => l.UserId)
             .FirstOrDefaultAsync(l => l.LeaderBoardId == id);
 
@@ -116,10 +116,6 @@ public class LeaderboardService : ILeaderboardService
             AchievedAt = leaderboard.AchievedAt,
 
         };
-        
-
-
-        
 
     }
 
@@ -144,19 +140,16 @@ public class LeaderboardService : ILeaderboardService
             .Include(r => r.User)
             .Where(r => r.UserId == id)
             .OrderBy(r => r.Score)
-            .Select(r => new Leaderboard
+            .Select(r => new LeaderboardDto
             {
-                LeaderBoardId = r.LeaderBoardId,
+                LeaderboardId = r.LeaderBoardId,
                 Ranking = r.Ranking,
-                Score = r.Score,
+                Score = r.Score
 
             })
             .ToListAsync();
         
-        return ranked;
+        return ranked.First();
+        
     }
-
-
-
-
 }

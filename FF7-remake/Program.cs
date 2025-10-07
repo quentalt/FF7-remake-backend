@@ -11,9 +11,9 @@ builder.Services.AddDbContext<Ff7DbContext>(options =>
 
 builder.Services.AddScoped<IChapterService, ChapterService>();
 builder.Services.AddScoped<IUserService, UserService>();
-/*builder.Services.AddScoped<IQuizService, QuizService>();
-builder.Services.AddScoped<IUserProgressService, UserProgressService>();
-builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();*/
+builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
+builder.Services.AddScoped<IQuizService, QuizService>();
+/*builder.Services.AddScoped<IUserProgressService, UserProgressService>();*/
 
 builder.Services.AddCors(options =>
 {

@@ -1,11 +1,10 @@
-using System.Runtime.Serialization;
 using FF7_remake.DTOs;
 using FF7_remake.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing.Template;
 
 namespace FF7_remake.Controllers;
 [ApiController]
+[Route("api/[controller]")]
 public class QuizzesController : ControllerBase
 {
     private readonly IQuizService _quizService;
@@ -41,7 +40,7 @@ public class QuizzesController : ControllerBase
         }
     }
 
-    [HttpGet]
+    [HttpGet("{id}")]
     public async Task<ActionResult<ApiResponse<QuizDto>>> GetQuiz(int id)
     {
         try
@@ -55,7 +54,6 @@ public class QuizzesController : ControllerBase
                     Message = "Quiz not found",
 
                 });
-                
             }
 
             return Ok(new ApiResponse<QuizDto>
@@ -65,9 +63,6 @@ public class QuizzesController : ControllerBase
                     Data = quizzes
                 }
             );
-
-
-
         }
         catch (Exception ex)
         {
@@ -107,7 +102,7 @@ public class QuizzesController : ControllerBase
         }
     }
 
-    [HttpPut(template: "{ id }")]
+    [HttpPut("{id}")]
     public async Task<ActionResult<ApiResponse<QuizDto>>> UpdateQuiz(int id, CreateQuizDto updateQuizDto)
     {
         try
@@ -188,48 +183,29 @@ public class QuizzesController : ControllerBase
         }
     }
 
-    [HttpGet]
-
-    public async Task<ActionResult<ApiResponse<List<QuizDto>>>> AnswerQuiz(int chapterId, Dictionary < int, string> userAnswers)
+    [HttpPost("chapter/{chapterId}/answer")]
+    public async Task<ActionResult<ApiResponse<List<QuizDto>>>> AnswerQuiz(int chapterId, [FromBody] Dictionary <int, string> userAnswers)
     {
          try
-                {
-                    var answer = await _quizService.checkAnswerAsync(chapterId, userAnswers);
-                    if (answer == null)
-                    {
-                        return NotFound(new ApiResponse <List<QuizDto>>
-                        {
-                            Success = false,
-                            Message = "Answer not found",
-        
-                        });
-                        
-                    }
-        
-                    return Ok(new ApiResponse<List<QuizDto>>
-                        {
-                            Success = true,
-                            Message = "Answer retrieved successfully",
-                            Data = answer
-                        }
-                    );
-        
-        
-        
-                }
-                catch (Exception ex)
-                {
-                    return StatusCode(500, new ApiResponse<List<QuizDto>>
-                    {
-                        Success = false,
-                        Message = "An error occured while retrieving the quiz",
-                        Errors = [ex.Message]
-                    });
-                   
-                }
-        
-    }
+         {
+             var answer = await _quizService.CheckAnswerAsync(chapterId, userAnswers);
 
-    
-    
+             return Ok(new ApiResponse<List<QuizDto>>
+                 {
+                     Success = true,
+                     Message = "Answer retrieved successfully",
+                     Data = answer
+                 }
+             );
+         }
+         catch (Exception ex)
+         {
+             return StatusCode(500, new ApiResponse<List<QuizDto>>
+             {
+                 Success = false,
+                 Message = "An error occured while retrieving the quiz",
+                 Errors = [ex.Message]
+             });
+         }
+    }
 }
