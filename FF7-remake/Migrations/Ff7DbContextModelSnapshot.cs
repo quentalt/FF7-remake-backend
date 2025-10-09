@@ -61,10 +61,8 @@ namespace FF7_remake.Migrations
                     b.Property<DateTime>("AchievedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Ranking")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                    b.Property<int>("Ranking")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Score")
                         .HasColumnType("integer");

@@ -8,18 +8,16 @@ public class Leaderboard
     [Key]
     public int LeaderBoardId { get; set; }
     
-    [Required]
-    public int UserId { get; set; }
     
     [Required]
     public int Score { get; set; }
     
-    [StringLength(50)]
-    public string Ranking { get; set; }
+    public int Ranking { get; set; }
     
-    public DateTime AchievedAt { get; set; }
+    public DateTime AchievedAt { get; set; } = DateTime.UtcNow;
     
     [ForeignKey("UserId")]
-    public virtual User User { get; set; }
-    
+    public virtual User User { get; set; } = null!;
+
+    public int UserId { get; set; }
 }
