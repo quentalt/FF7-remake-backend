@@ -1,6 +1,42 @@
+using FF7_remake.DBContext;
+using FF7_remake.DTOs;
+using Microsoft.EntityFrameworkCore;
+
+
 namespace FF7_remake.Services;
 
-public class UserProgressService
+public interface IUserProgressService
 {
-    
+    Task<UserProgressDto?> GetUserProgressAsync(int id);
+}
+public class UserProgressService : IUserProgressService
+{
+    private readonly Ff7DbContext context;
+    public UserProgressService(Ff7DbContext context)
+    {
+        this.context = context;
+    }
+
+    public async Task<UserProgressDto?> GetUserProgressAsync(int id)
+    {
+        var userprog = await context.UserProgresses
+            .Include(u => u.Chapter)
+            .FirstOrDefaultAsync(u => u.UserId == id);
+
+        if (userprog == null)
+        {
+            return null;
+        }
+
+        return new UserProgressDto
+        {
+            ChapterId = userprog.ChapterId,
+            LastUpdated = userprog.LastUpdated,
+            SavedState = userprog.SavedState,
+        };
+
+    }
+
+
+
 }
