@@ -4,78 +4,60 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FF7_remake.Controllers;
 [ApiController]
+[Route("api/[controller]")]
 
-public class LeaderboardsController : Controller
+public class LeaderboardsController : ControllerBase
 {
     private readonly ILeaderboardService _leaderboardService;
-    // GET
-    public async Task<ActionResult<ApiResponse<LeaderboardDto>>> CreateLeaderboard(CreateLeaderboardDto createLeaderboardDto)
+    
+    public LeaderboardsController(ILeaderboardService leaderboardService)
     {
-        try
-        {
-            var leaderboard = await _leaderboardService.CreateLeaderboardDtoAsync(createLeaderboardDto);
-            return CreatedAtAction(nameof(GetLeaderboard), routeValues: new { id = leaderboard.LeaderboardId }, new ApiResponse<LeaderboardDto>
-            {
-                Success ="true",
-                Message =" leaderboard created successfully",
-                Data = leaderboard     
-            });
-
-        }
-        catch (Exception ex )
-        {
-            return StatusCode(500, new ApiResponse<LeaderboardDto>()
-            {
-                Success = false,
-                Message = "Error creating leaderboard",
-                Errors = [ex.Message]
-
-            });
-            Console.WriteLine();
-            throw;
-        }
+        _leaderboardService = leaderboardService;
     }
-
-
-    [HttpPut(template: "{id }")]
-
-    public async Task<ActionResult<ApiResponse<LeaderboardDto>>> UpdateLeaderboard(int id,
-        CreateLeaderboardDto updateLeaderboardDto)
+    
+    [HttpGet]
+    public async Task<IActionResult> GetLeaderboard([FromQuery] int limit = 100)
     {
-        try
+        var leaderboard = await _leaderboardService.GetLeaderboardAsync(limit);
+        return Ok(leaderboard);
+    }
+    
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetUserLeaderboardEntries(int userId)
+    {
+        var entries = await _leaderboardService.GetLeaderboardById(userId);
+        return Ok(entries);
+    }
+    
+    [HttpPost("user/{userId}")]
+    public async Task<IActionResult> CreateLeaderboardEntry(int userId, [FromBody] CreateLeaderboardDto createLeaderboardDto)
+    {
+        var entry = await _leaderboardService.CreateLeaderboardEntryAsync(userId, createLeaderboardDto);
+        return CreatedAtAction(nameof(GetUserLeaderboardEntries), new { userId = userId }, entry);
+    }
+    
+    [HttpPost("initialize")]
+    public async Task<IActionResult> InitializeLeaderboard([FromBody] InitializeLeaderboardDto initializeLeaderboardDto)
+    {
+        var entries = await _leaderboardService.InitializeLeaderboardAsync(initializeLeaderboardDto);
+        return Ok(entries);
+    }
+    
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteLeaderboardEntry(int id)
+    {
+        var success = await _leaderboardService.DeleteLeaderboardEntryAsync(id);
+        if (!success)
         {
-            var leaderboard =  await _leaderboardService.UpdateLeaderboardDtoAsync(id, updateLeaderboardDto);
-            if (leaderboard == null)
-            {
-                return NotFound(new ApiResponse<LeaderboardDto>
-                {
-                    Success = false,
-                    Message = "Error updating leaderboard",
-
-                });
-
-            }
-
-            return Ok(new ApiResponse<LeaderboardDto>
-                {
-                    Success = true,
-                    Message = "leaderboard updated successfully",
-                    Data = leaderboard
-
-                }
-            );
-
+            return NotFound();
         }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new ApiResponse<LeaderboardDto>
-                {
-                    Success = false,
-                    Message = "An error occured while updating leaderboard",
-                    Errors = [ex.Message]
-                }
-            );
-
-        }
+        return NoContent();
+    }
+    
+    [HttpGet("user/{userId}/rank")]
+    public async Task<IActionResult> GetUserRank(int userId)
+    {
+        var rank = await _leaderboardService.GetUserRankAsync(userId);
+        return Ok(new { UserId = userId, Rank = rank });
     }
 }

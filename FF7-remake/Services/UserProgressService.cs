@@ -1,5 +1,6 @@
 using FF7_remake.DBContext;
 using FF7_remake.DTOs;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -36,7 +37,4 @@ public class UserProgressService : IUserProgressService
         };
 
     }
-
-
-
 }

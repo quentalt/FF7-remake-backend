@@ -1,162 +1,176 @@
-using FF7_remake.DBContext;
-using FF7_remake.DTOs;
-using FF7_remake.Models;
-using Microsoft.EntityFrameworkCore;
+  using FF7_remake.DBContext;
+  using FF7_remake.DTOs;
+  using FF7_remake.Models;
+  using Microsoft.EntityFrameworkCore;
+  
+  namespace FF7_remake.Services;
 
-namespace FF7_remake.Services;
-
-public interface ILeaderboardService
-{
-    Task<List<LeaderboardDto>> GetAllLeaderboard();
-    Task<LeaderboardDto?> GetLeaderboardByIdAsync(int id);
-    Task<LeaderboardDto> CreateLeaderboardDtoAsync(CreateLeaderboardDto createLeaderboardDto);
-    Task<LeaderboardDto?> UpdateLeaderboardDtoAsync(int id, CreateLeaderboardDto updateLeaderboardDto);
-    Task<bool> DeleteLeaderboardByIdAsync(int id);
-    
-    Task <LeaderboardDto> RankingByOrderById(int id);
-}
-public class LeaderboardService : ILeaderboardService
-{
-
-    private readonly Ff7DbContext context;
-    public LeaderboardService(Ff7DbContext context)
+  public interface ILeaderboardService
     {
-        this.context = context;
-    }
-    
-    public async Task<List<LeaderboardDto>> GetAllLeaderboard()
-    {
-        return await context.Leaderboards
-            .Include(l => l.User )
-            .Select(l => new LeaderboardDto
-            {
-                LeaderboardId = l.LeaderBoardId,
-                Score = l.Score,
-                Ranking = l.Ranking,
-                AchievedAt = l.AchievedAt,
-                UserName = l.User.Username,
-                UserId = l.UserId
-                
-            }).ToListAsync();
-        
-                    
-          
-        
-    }
-    
-    public async Task<LeaderboardDto?> GetLeaderboardByIdAsync( int id)
-
-    {
-        var leaderboard = await context.Leaderboards
-            .Include(l => l.UserId)
-            .FirstOrDefaultAsync(l => l.LeaderBoardId == id);
-
-        if (leaderboard == null)
-        {
-            return null;
-        }
-
-        return new LeaderboardDto
-        {
-            LeaderboardId = leaderboard.LeaderBoardId,
-            Score = leaderboard.Score,
-            Ranking = leaderboard.Ranking,
-            AchievedAt = leaderboard.AchievedAt,
-            UserName = leaderboard.User.Username,
-            UserId = leaderboard.UserId
-
-        };
-
-
+        Task<List<LeaderboardDto>> GetLeaderboardAsync(int limit = 100);
+        Task<List<LeaderboardDto>> GetLeaderboardById(int userId);
+        Task<LeaderboardDto> CreateLeaderboardEntryAsync(int userId, CreateLeaderboardDto createLeaderboardDto);
+        Task<List<LeaderboardDto>> InitializeLeaderboardAsync(InitializeLeaderboardDto initializeLeaderboardDto);
+        Task<bool> DeleteLeaderboardEntryAsync(int id);
+        Task<int> GetUserRankAsync(int userId);
     }
 
-    public async Task<LeaderboardDto> CreateLeaderboardDtoAsync(CreateLeaderboardDto createLeaderboardDto)
-    {
-        var leaderboard = new Leaderboard
-        {
-            Score = createLeaderboardDto.Score,
-            Ranking = createLeaderboardDto.Ranking,
-            UserId = createLeaderboardDto.UserId,
-        };
+  public class LeaderboardService : ILeaderboardService
+  {
+      private readonly Ff7DbContext _context;
 
-        context.Leaderboards.Add(leaderboard);
-        await context.SaveChangesAsync();
+      public LeaderboardService(Ff7DbContext context)
+      {
+          _context = context;
+      }
 
-        return new LeaderboardDto
-        {
-            LeaderboardId = leaderboard.LeaderBoardId,
-            Score = leaderboard.Score,
-            Ranking = leaderboard.Ranking,
-            AchievedAt = leaderboard.AchievedAt,
-            UserId = leaderboard.UserId
+      public async Task<List<LeaderboardDto>> GetLeaderboardAsync(int limit = 100)
+      {
+          return await _context.Leaderboards
+              .Include(l => l.User)
+              .OrderByDescending(l => l.Score)
+              .Take(limit)
+              .Select(l => new LeaderboardDto
+              {
+                  LeaderboardId = l.LeaderBoardId,
+                  Score = l.Score,
+                  Ranking = l.Ranking,
+                  AchievedAt = l.AchievedAt,
+                  UserName = l.User.Username
+              }).ToListAsync();
+      }
 
-        };
-        
-    }
+      public async Task<List<LeaderboardDto>> GetLeaderboardById(int userId)
+      {
+          return await _context.Leaderboards
+              .Include(l => l.User)
+              .Where(l => l.UserId == userId)
+              .OrderByDescending(l => l.Score)
+              .Select(l => new LeaderboardDto
+              {
+                  LeaderboardId = l.LeaderBoardId,
+                  Score = l.Score,
+                  Ranking = l.Ranking,
+                  AchievedAt = l.AchievedAt,
+                  UserName = l.User.Username
+              }).ToListAsync();
+      }
 
-    public async Task<LeaderboardDto?> UpdateLeaderboardDtoAsync(int id, CreateLeaderboardDto updateLeaderboardDto)
-    {
-        
-        var leaderboard = await context.Leaderboards.FindAsync(id);
-           
+      public async Task<LeaderboardDto> CreateLeaderboardEntryAsync(int userId,
+          CreateLeaderboardDto createLeaderboardDto)
+      {
+          // Vérifier si l'utilisateur existe
+          var user = await _context.Users.FindAsync(userId);
+          if (user == null)
+          {
+              throw new Exception($"User with ID {userId} not found");
+          }
 
-        if (leaderboard == null) return null;
+          var leaderboardEntry = new Leaderboard
+          {
+              UserId = userId,
+              Score = createLeaderboardDto.Score,
+              Ranking = 0, 
+              AchievedAt = DateTime.UtcNow
+          };
 
-        leaderboard.Ranking = updateLeaderboardDto.Ranking;
-        leaderboard.Score = updateLeaderboardDto.Score;
+          _context.Leaderboards.Add(leaderboardEntry);
+          await _context.SaveChangesAsync();
 
+          var entry = await _context.Leaderboards
+              .Include(l => l.User)
+              .FirstOrDefaultAsync(l => l.LeaderBoardId == leaderboardEntry.LeaderBoardId);
 
-        await context.SaveChangesAsync();
+          return new LeaderboardDto
+          {
+              LeaderboardId = entry!.LeaderBoardId,
+              Score = entry.Score,
+              Ranking = entry.Ranking,
+              AchievedAt = entry.AchievedAt,
+              UserName = entry.User.Username
+          };
+      }
 
-        return new LeaderboardDto()
-        {
-            LeaderboardId = leaderboard.LeaderBoardId,
-            Score = leaderboard.Score,
-            Ranking = leaderboard.Ranking,
-            AchievedAt = leaderboard.AchievedAt,
+      public async Task<List<LeaderboardDto>> InitializeLeaderboardAsync(
+          InitializeLeaderboardDto initializeLeaderboardDto)
+      {
+          var createdEntries = new List<LeaderboardDto>();
 
-        };
-        
+          foreach (var userId in initializeLeaderboardDto.UserIds)
+          {
+              // Vérifier si l'utilisateur existe
+              var user = await _context.Users.FindAsync(userId);
+              if (user == null)
+              {
+                  continue; // Ignorer les utilisateurs qui n'existent pas
+              }
 
+              // Vérifier si l'utilisateur n'a pas déjà une entrée dans le leaderboard
+              var existingEntry = await _context.Leaderboards
+                  .FirstOrDefaultAsync(l => l.UserId == userId);
 
-        
+              if (existingEntry == null)
+              {
+                  // Créer une entrée vierge
+                  var leaderboardEntry = new Leaderboard
+                  {
+                      UserId = userId,
+                      Score = 0,
+                      Ranking = 0,
+                      AchievedAt = DateTime.UtcNow
+                  };
 
-    }
+                  _context.Leaderboards.Add(leaderboardEntry);
+                  await _context.SaveChangesAsync();
 
-    public async Task<bool> DeleteLeaderboardByIdAsync(int id)
-    {
-        var leaderboard = await context.Leaderboards.FindAsync(id);
+                  createdEntries.Add(new LeaderboardDto
+                  {
+                      LeaderboardId = leaderboardEntry.LeaderBoardId,
+                      Score = leaderboardEntry.Score,
+                      Ranking = leaderboardEntry.Ranking,
+                      AchievedAt = leaderboardEntry.AchievedAt,
+                      UserName = user.Username
+                  });
+              }
+              else
+              {
+                  // Retourner l'entrée existante
+                  createdEntries.Add(new LeaderboardDto
+                  {
+                      LeaderboardId = existingEntry.LeaderBoardId,
+                      Score = existingEntry.Score,
+                      Ranking = existingEntry.Ranking,
+                      AchievedAt = existingEntry.AchievedAt,
+                      UserName = user.Username
+                  });
+              }
+          }
 
-        if (leaderboard == null)
-        {
-            return false;
-        }
-        
-        context.Leaderboards.Remove(leaderboard);
+          return createdEntries;
+      }
 
-        await context.SaveChangesAsync();
-        return true;
-    }
-    
-    public async Task<LeaderboardDto> RankingByOrderById(int id)
-    {
-        var ranked = await context.Leaderboards
-            .Include(r => r.User)
-            .Where(r => r.UserId == id)
-            .OrderBy(r => r.Score)
-            .Select(r => new Leaderboard
-            {
-                LeaderBoardId = r.LeaderBoardId,
-                Ranking = r.Ranking,
-                Score = r.Score,
+      public async Task<bool> DeleteLeaderboardEntryAsync(int id)
+      {
+          var entry = await _context.Leaderboards.FindAsync(id);
+          if (entry == null) return false;
 
-            })
-            .ToListAsync();
-        
-        return ranked;
-    }
+          _context.Leaderboards.Remove(entry);
+          await _context.SaveChangesAsync();
+          return true;
+      }
 
+      public async Task<int> GetUserRankAsync(int userId)
+      {
+          var userEntry = await _context.Leaderboards
+              .Where(l => l.UserId == userId)
+              .OrderByDescending(l => l.Score)
+              .FirstOrDefaultAsync();
 
+          if (userEntry == null) return -1; 
 
+          var rank = await _context.Leaderboards
+              .CountAsync(l => l.Score > userEntry.Score) + 1;
 
-}
+          return rank;
+      }
+  }

@@ -15,7 +15,7 @@ public class Leaderboard
     public int Score { get; set; }
     
     [StringLength(50)]
-    public string Ranking { get; set; }
+    public int Ranking { get; set; }
     
     public DateTime AchievedAt { get; set; }
     
