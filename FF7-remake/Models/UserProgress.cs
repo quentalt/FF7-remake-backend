@@ -16,6 +16,10 @@ public class UserProgress
     [Required]
     public int ChapterId { get; set; }
     
+    [Required]
+    [StringLength(2000)]
+    public string SavedState { get; set; }
+    
     public DateTime LastUpdated { get; set; }
     
     [ForeignKey("UserId")]
@@ -23,6 +27,4 @@ public class UserProgress
     
     [ForeignKey("ChapterId")]
     public virtual Chapter Chapter { get; set; }
-
-    public bool IsCompleted { get; set; }
 }

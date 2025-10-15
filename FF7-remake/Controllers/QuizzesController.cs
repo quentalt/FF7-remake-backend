@@ -1,11 +1,9 @@
-using System.Runtime.Serialization;
 using FF7_remake.DTOs;
 using FF7_remake.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing.Template;
-
 namespace FF7_remake.Controllers;
 [ApiController]
+
 public class QuizzesController : ControllerBase
 {
     private readonly IQuizService _quizService;
@@ -107,7 +105,7 @@ public class QuizzesController : ControllerBase
         }
     }
 
-    [HttpPut(template: "{ id }")]
+    [HttpPut("{id}")]
     public async Task<ActionResult<ApiResponse<QuizDto>>> UpdateQuiz(int id, CreateQuizDto updateQuizDto)
     {
         try

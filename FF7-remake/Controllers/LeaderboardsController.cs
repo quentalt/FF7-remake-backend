@@ -16,48 +16,171 @@ public class LeaderboardsController : ControllerBase
     }
     
     [HttpGet]
-    public async Task<IActionResult> GetLeaderboard([FromQuery] int limit = 100)
+    public async Task<ActionResult> GetLeaderboard([FromQuery] int limit = 100)
     {
-        var leaderboard = await _leaderboardService.GetLeaderboardAsync(limit);
-        return Ok(leaderboard);
+        try
+        {
+            var leaderboard = await _leaderboardService.GetLeaderboardAsync(limit);
+            return Ok(new ApiResponse<List<LeaderboardDto>>
+            {
+                Success = true,
+                Message = "Leaderboard retrieved successfully",
+                Data = leaderboard
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ApiResponse<List<LeaderboardDto>>
+            {
+                Success = false,
+                Message = "An error occurred while retrieving the leaderboard",
+                Errors = [ex.Message]
+            });
+        }
     }
     
     [HttpGet("user/{userId}")]
-    public async Task<IActionResult> GetUserLeaderboardEntries(int userId)
+    public async Task<ActionResult> GetUserLeaderboardEntries(int userId)
     {
+      try 
+      {
         var entries = await _leaderboardService.GetLeaderboardById(userId);
-        return Ok(entries);
+        if (entries == null || !entries.Any())
+        {
+            return NotFound(new ApiResponse<List<LeaderboardDto>>
+            {
+                Success = false,
+                Message = "No leaderboard entries found for the user",
+                Data = null
+            });
+        }
+        
+        return Ok(new ApiResponse<List<LeaderboardDto>>
+        {
+            Success = true,
+            Message = "User leaderboard entries retrieved successfully",
+            Data = entries
+        });
+      }
+      catch (Exception ex)
+      {
+        return StatusCode(500, new ApiResponse<List<LeaderboardDto>>
+        {
+            Success = false,
+            Message = "An error occurred while retrieving user leaderboard entries",
+            Errors = [ex.Message]
+        });
+      }
     }
     
     [HttpPost("user/{userId}")]
-    public async Task<IActionResult> CreateLeaderboardEntry(int userId, [FromBody] CreateLeaderboardDto createLeaderboardDto)
+    public async Task<ActionResult> CreateLeaderboardEntry(int userId, [FromBody] CreateLeaderboardDto createLeaderboardDto)
     {
-        var entry = await _leaderboardService.CreateLeaderboardEntryAsync(userId, createLeaderboardDto);
-        return CreatedAtAction(nameof(GetUserLeaderboardEntries), new { userId = userId }, entry);
+        try
+        {
+            var entry = await _leaderboardService.CreateLeaderboardEntryAsync(userId, createLeaderboardDto);
+            return CreatedAtAction(nameof(GetUserLeaderboardEntries), new { userId = userId }, entry);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ApiResponse<LeaderboardDto>
+            {
+                Success = false,
+                Message = "An error occurred while creating the leaderboard entry",
+                Errors = [ex.Message]
+            });
+        }
     }
     
     [HttpPost("initialize")]
-    public async Task<IActionResult> InitializeLeaderboard([FromBody] InitializeLeaderboardDto initializeLeaderboardDto)
+    public async Task<ActionResult> InitializeLeaderboard([FromBody] InitializeLeaderboardDto initializeLeaderboardDto)
     {
-        var entries = await _leaderboardService.InitializeLeaderboardAsync(initializeLeaderboardDto);
-        return Ok(entries);
+        try
+        {
+            await _leaderboardService.InitializeLeaderboardAsync(initializeLeaderboardDto);
+            return Ok(new ApiResponse<string>
+            {
+                Success = true,
+                Message = "Leaderboard initialized successfully",
+                Data = null
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ApiResponse<string>
+            {
+                Success = false,
+                Message = "An error occurred while initializing the leaderboard",
+                Errors = [ex.Message]
+            });
+        }
     }
     
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteLeaderboardEntry(int id)
+    public async Task<ActionResult> DeleteLeaderboardEntry(int id)
     {
-        var success = await _leaderboardService.DeleteLeaderboardEntryAsync(id);
-        if (!success)
+        try
         {
-            return NotFound();
+            var success = await _leaderboardService.DeleteLeaderboardEntryAsync(id);
+            if (!success)
+            {
+                return NotFound(new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "Leaderboard entry not found",
+                    Data = null
+                });
+            }
+
+            return Ok(new ApiResponse<string>
+            {
+                Success = true,
+                Message = "Leaderboard entry deleted successfully",
+                Data = null
+            });
         }
-        return NoContent();
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ApiResponse<string>
+            {
+                Success = false,
+                Message = "An error occurred while deleting the leaderboard entry",
+                Errors = [ex.Message]
+            });
+        }
     }
     
     [HttpGet("user/{userId}/rank")]
-    public async Task<IActionResult> GetUserRank(int userId)
+    public async Task<ActionResult> GetUserRank(int userId)
     {
-        var rank = await _leaderboardService.GetUserRankAsync(userId);
-        return Ok(new { UserId = userId, Rank = rank });
+        try
+        {
+            var rank = await _leaderboardService.GetUserRankAsync(userId);
+            if (rank == -1)
+            {
+                return NotFound(new ApiResponse<int>
+                {
+                    Success = false,
+                    Message = "User leaderboard entry not found",
+                    Data = -1
+                });
+            }
+
+            return Ok(new ApiResponse<int>
+            {
+                Success = true,
+                Message = "User rank retrieved successfully",
+                Data = rank
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ApiResponse<int>
+            {
+                Success = false,
+                Message = "An error occurred while retrieving the user rank",
+                Errors = [ex.Message]
+            });
+        }
     }
 }
