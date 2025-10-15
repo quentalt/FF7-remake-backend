@@ -33,8 +33,14 @@ public class UserProgressService : IUserProgressService
         {
             ChapterId = userprog.ChapterId,
             LastUpdated = userprog.LastUpdated,
-            SavedState = userprog.SavedState,
+            isCompleted = userprog.IsCompleted,
         };
-
+    }
+    public async Task<double> CalculateUserProgress(int userId)
+    {
+        var totalChapeters = await context.Chapters.CountAsync();
+        var completedChapters = await context.UserProgresses.CountAsync(up => up.UserId == userId && up.IsCompleted);
+        if (totalChapeters == 0) return 0;
+        return (double)completedChapters / totalChapeters * 100;
     }
 }

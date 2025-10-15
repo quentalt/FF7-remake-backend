@@ -61,7 +61,7 @@ public class Ff7DbContext : DbContext
                 .WithMany(c => c.UserProgresses)
                 .HasForeignKey(up => up.ChapterId)
                 .OnDelete(DeleteBehavior.Cascade);
-            entity.Property(e => e.SavedState).IsRequired();
+            entity.Property(e => e.LastUpdated).IsRequired();
         });
         
         modelBuilder.Entity<Leaderboard>(entity =>
